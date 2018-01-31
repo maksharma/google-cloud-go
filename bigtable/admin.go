@@ -848,3 +848,23 @@ func (iac *InstanceAdminClient) Clusters(ctx context.Context, instanceId string)
 	}
 	return cis, nil
 }
+
+// GetCluster fetches a cluster in an instance
+func (iac *InstanceAdminClient) GetCluster(ctx context.Context, instanceId, clusterId string) (*ClusterInfo, error) {
+	ctx = mergeOutgoingMetadata(ctx, iac.md)
+	req := &btapb.GetClusterRequest{Name: "projects/" + iac.project + "/instances/" + instanceId + "/clusters" + clusterId}
+	c, err := iac.iClient.GetCluster(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	nameParts := strings.Split(c.Name, "/")
+	locParts := strings.Split(c.Location, "/")
+	cis := &ClusterInfo{
+		Name:       nameParts[len(nameParts)-1],
+		Zone:       locParts[len(locParts)-1],
+		ServeNodes: int(c.ServeNodes),
+		State:      c.State.String(),
+	}
+	return cis, nil
+}
